@@ -10,12 +10,12 @@ async function bootstrap() {
   
   app.useGlobalPipes(new ValidationPipe({whitelist:true, transform:true}))
   app.connectMicroservice<MicroserviceOptions>({
-    transport:Transport.RMQ,
+    transport:Transport.RMQ,   
     options:{
       urls:['amqp://localhost:5672'],
       queue:configService.get<string>("RABBITMQ_ORDER_QUEUE"),
       queueOptions:{
-        durable:false
+        durable:true  
       }
     }
   })

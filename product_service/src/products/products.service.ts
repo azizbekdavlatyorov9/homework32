@@ -1,26 +1,56 @@
-import { Injectable } from '@nestjs/common';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { CreateProductDto } from "./dto/create-product.dto";
+import { UpdateProductDto } from "./dto/update-product.dto";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Product } from "./entities/product.entity";
+import { Repository } from "typeorm";
 
 @Injectable()
 export class ProductsService {
-  create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
+  constructor(
+    @InjectRepository(Product) private productRepo: Repository<Product>,
+  ) {}
+
+  async create(createProductDto: CreateProductDto) {
+    const product = this.productRepo.create(createProductDto);
+    return await this.productRepo.save(product);
   }
 
-  findAll() {
-    return `This action returns all products`;
+  async findAll() {
+    return this.productRepo.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findOne(id: number) {
+    const foundedProduct = await this.productRepo.findOne({ where: { id } });
+    if (!foundedProduct) throw new NotFoundException("Product not found");
+    return foundedProduct;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id: number, updateProductDto: UpdateProductDto) {
+    const foundedProduct = await this.productRepo.findOne({ where: { id } });
+    if (!foundedProduct) throw new NotFoundException("Product not found");
+
+    Object.assign(foundedProduct, updateProductDto)
+
+    return await this.productRepo.save(foundedProduct);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  async remove(id: number) {
+    const foundedProduct = await this.productRepo.findOne({ where: { id } });
+    if (!foundedProduct) throw new NotFoundException("Product not found");
+
+    return await this.productRepo.remove(foundedProduct)
+  }
+
+  async decrasingQuantity(productId: number, quantity: number) {
+    const foundedProduct = await this.productRepo.findOne({where:{id:productId}})
+    
+    if(!foundedProduct ||foundedProduct.stock < quantity){
+      return false
+    }
+
+    foundedProduct.stock -= quantity
+    await this.productRepo.save(foundedProduct)
+    return true
   }
 }

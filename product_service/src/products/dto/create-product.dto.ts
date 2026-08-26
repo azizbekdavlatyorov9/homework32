@@ -2,16 +2,16 @@ import { IsNumber, IsOptional, IsPositive, IsString } from "class-validator";
 
 export class CreateProductDto {
   @IsString()
-  name!:string;
+  name!: string;
 
   @IsOptional()
   @IsString()
-  description?:string;
+  description?: string;
 
   @IsNumber()
   @IsPositive()
-  price!:number
-  
+  price!: number;
+
   @IsNumber()
-  stock!:string;
+  stock!: number;
 }
