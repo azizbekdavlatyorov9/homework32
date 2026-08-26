@@ -2,7 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 export enum OrderStatus {
   PENDING = "pending",
-  CONFIRMED = "confimed",
+  CONFIRMED = "confirmed",
   REJECTED = "rejected",
 }
 

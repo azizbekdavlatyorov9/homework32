@@ -41,4 +41,13 @@ export class OrdersService {
     if (!foundedOrder) throw new NotFoundException("Order not found");
     return foundedOrder;
   }
+
+  async updateStatus(data:any) {
+    const foundedOrder = await this.orderRepo.findOne({where:{id:data.orderId}})
+
+    if(!foundedOrder) throw new NotFoundException("Ordernot found")
+
+      foundedOrder.status = data.status
+      return await this.orderRepo.save(foundedOrder)
+  }
 }
