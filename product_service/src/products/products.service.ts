@@ -49,8 +49,16 @@ export class ProductsService {
       return false
     }
 
-    foundedProduct.stock -= quantity
+    // foundedProduct.stock -= quantity
     await this.productRepo.save(foundedProduct)
     return true
+  }
+
+  async checkStatus(dto:any){
+    const foundedProduct = await this.productRepo.findOne({where:{id:dto.productId}})
+    
+    if(!foundedProduct ||foundedProduct.stock < dto.quantity){
+      return {available: false, stock:0}
+    }
   }
 }

@@ -1,3 +1,4 @@
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { Module } from "@nestjs/common";
 import { ProductsService } from "./products.service";
 import { ProductsController } from "./products.controller";
@@ -9,19 +10,22 @@ import { ProductsEventController } from "./product-event.controller";
 @Module({
   imports: [
     TypeOrmModule.forFeature([Product]),
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: "ORDER_SERVICE",
-
-        transport: Transport.RMQ,
-        options: {
-          urls: ["amqp://localhost:5672"],
-          queue: "order_queue",
-          queueOptions: {
-            durable: true,
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get("RABBITMQ_URL")],
+            queue: configService.get<string>("RABBITMQ_ORDER_QUEUE"),
+            queueOptions: {
+              durable: true,
+            },
           },
-        }, 
-      }, 
+        }),
+      },
     ]),
   ],
   controllers: [ProductsController, ProductsEventController],

@@ -1,6 +1,12 @@
 import { Controller, Inject, Logger } from "@nestjs/common";
-import { ClientProxy, EventPattern, Payload } from "@nestjs/microservices";
+import { ClientProxy, EventPattern, MessagePattern, Payload } from "@nestjs/microservices";
 import { ProductsService } from "./products.service";
+
+export interface OrderDto {
+  orderId: number;
+  productId: number;
+  quantity: number;
+}
 
 @Controller("products")
 export class ProductsEventController {
@@ -10,7 +16,7 @@ export class ProductsEventController {
   ) {}
   private readonly Logger = new Logger(ProductsEventController.name);
   @EventPattern("created_order")
-  async handleOrder(@Payload() orderData: any) {
+  async handleOrder(@Payload() orderData: OrderDto) {
     if (!orderData) {
       new this.Logger.log("Order data not found");
     }
@@ -23,11 +29,18 @@ export class ProductsEventController {
     const result = {
       orderId: orderData.orderId,
       productId: orderData.productId,
-      status: access ? "confirmed" : "rejected"
-    }
+      status: access ? "confirmed" : "rejected",
+    };
 
-    this.clientService.emit("status_update", result)
-    new this.Logger.log(`"order result: " + ${access ? "confirmed" : "rejected"}`)
-
+    this.clientService.emit("status_update", result);
+    new this.Logger.log(
+      `"order result: " + ${access ? "confirmed" : "rejected"}`,
+    );
   }
+
+  @MessagePattern("check_status")
+async handleRequest(@Payload() dto:any) {
+  console.log(dto);
+  
+}
 }

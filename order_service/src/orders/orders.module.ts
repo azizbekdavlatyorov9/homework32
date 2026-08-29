@@ -10,21 +10,24 @@ import { OrdersEventController } from "./orders-event.controller";
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order]),
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: "PRODUCT_SERVICE",
-
-        transport: Transport.RMQ,
-        options: {
-          urls: ["amqp://localhost:5672"],
-          queue: "product_queue",
-          queueOptions: {
-            durable: true
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get("RABBITMQ_URL")],
+            queue: configService.get<string>("RABBITMQ_PRODUCT_QUEUE"),
+            queueOptions: {
+              durable: true,
+            },
           },
-        },
+        }),
       },
     ]),
-  ], 
+  ],
   controllers: [OrdersController, OrdersEventController],
   providers: [OrdersService],
 })
