@@ -16,7 +16,9 @@ async function bootstrap() {
       queue:configService.get<string>("RABBITMQ_ORDER_QUEUE"),
       queueOptions:{
         durable:true  
-      }
+      },
+      noAck:false,
+      prefetchCount:5,
     }
   })
 

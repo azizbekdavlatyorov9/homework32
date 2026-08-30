@@ -30,7 +30,7 @@ export class ProductsService {
     const foundedProduct = await this.productRepo.findOne({ where: { id } });
     if (!foundedProduct) throw new NotFoundException("Product not found");
 
-    Object.assign(foundedProduct, updateProductDto)
+    Object.assign(foundedProduct, updateProductDto);
 
     return await this.productRepo.save(foundedProduct);
   }
@@ -39,26 +39,43 @@ export class ProductsService {
     const foundedProduct = await this.productRepo.findOne({ where: { id } });
     if (!foundedProduct) throw new NotFoundException("Product not found");
 
-    return await this.productRepo.remove(foundedProduct)
+    return await this.productRepo.remove(foundedProduct);
   }
 
   async decrasingQuantity(productId: number, quantity: number) {
-    const foundedProduct = await this.productRepo.findOne({where:{id:productId}})
-    
-    if(!foundedProduct ||foundedProduct.stock < quantity){
-      return false
-    }
+    const result = await this.productRepo
+      .createQueryBuilder()
+      .update(Product)
+      .set({ stock: () => "stock - :quantity" })
+      .where("id = :productId AND stock >= :quantity", { productId, quantity })
+      .setParameters({ productId, quantity })
+      .execute();
+
+    return (result.affected ?? 0) > 0;
+
+    // const foundedProduct = await this.productRepo.findOne({where:{id:productId}})
+
+    // if(!foundedProduct ||foundedProduct.stock < quantity){
+    //   return false
+    // }
 
     // foundedProduct.stock -= quantity
-    await this.productRepo.save(foundedProduct)
-    return true
+    // await this.productRepo.save(foundedProduct)
+    // return true
   }
 
-  async checkStatus(dto:any){
-    const foundedProduct = await this.productRepo.findOne({where:{id:dto.productId}})
-    
-    if(!foundedProduct ||foundedProduct.stock < dto.quantity){
-      return {available: false, stock:0}
+  async checkStatus(dto: any) {
+    const foundedProduct = await this.productRepo.findOne({
+      where: { id: dto.productId },
+    });
+
+    if (!foundedProduct || foundedProduct.stock < dto.quantity) {
+      return { available: false, stock: 0 };
     }
+
+    return {
+      available: foundedProduct.stock >= dto.quantity,
+      stock: foundedProduct.stock,
+    };
   }
 }

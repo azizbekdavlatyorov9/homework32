@@ -15,35 +15,37 @@ export class OrdersService {
     @Inject("PRODUCT_SERVICE") private clientService: ClientProxy,
   ) {}
   async create(createOrderDto: CreateOrderDto) {
-    const checkStatus = await firstValueFrom(
-      this.clientService.send("check_status", {
+    // const checkStatus = await firstValueFrom(
+    //   this.clientService.send("check_status", {
+    //     productId: createOrderDto.productId,
+    //     quantity: createOrderDto.quantity,
+    //   }).pipe(
+    //     timeout(5000), // 5 sekundda javob kelmasa timeout bervoradi
+    //     catchError(() => {
+    //       throw new BadRequestException("Product service javob bermadi")
+    //     })
+    //   )
+    // );
+
+    // if(!checkStatus.available) {
+    //   throw new BadRequestException("Bu maxsulot siz so'ragancha chiqmaydi")
+    // }
+
+      const order = this.orderRepo.create({
         productId: createOrderDto.productId,
         quantity: createOrderDto.quantity,
-      }).pipe(
-        timeout(5000), // 5 sekundda javob kelmasa timeout bervoradi
-        catchError(() => {
-          throw new BadRequestException("Product service javob bermadi")
-        })
-      )
-    );
+        status: OrderStatus.PENDING,
+      });
 
-    console.log(checkStatus)
+      await this.orderRepo.save(order);
 
-    // const order = this.orderRepo.create({
-    //   productId: createOrderDto.productId,
-    //   quantity: createOrderDto.quantity,
-    //   status: OrderStatus.PENDING,
-    // });
+      this.clientService.emit("created_order", {
+        orderId: order.id,
+        productId: order.productId,
+        quantity: order.quantity,
+      });
 
-    // await this.orderRepo.save(order);
-
-    // this.clientService.emit("created_order", {
-    //   orderId: order.id,
-    //   productId: order.productId,
-    //   quantity: order.quantity,
-    // });
-
-    // await this.orderRepo.save(order);
+      await this.orderRepo.save(order);
     return;
   }
 
